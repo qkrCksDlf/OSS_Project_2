@@ -33,8 +33,30 @@ def SC(group):
     re = re.iloc[:, :10]
     return re.columns
 
+def transform_value(x):
+    if x > 0:
+        return 1
+    elif x < 0:
+        return -1
+    else:
+        return 0
+
 def CR(group):
-    raise NotImplemented
+    re_series = pd.Series(np.zeros(len(group.columns)), index=group.columns)
+    for i in range(len(group.columns)):
+        col = group.columns[i]
+        x = group.subtract(group[col],axis=0)
+        x = x.applymap(transform_value)
+        sum_row = x.sum(axis=0)
+
+        s_changed = np.where(sum_row > 0, 1, np.where(sum_row < 0, -1, 0))
+        s_changed = pd.Series(s_changed, index=sum_row.index)
+
+        re_series += s_changed
+
+    top_10 = re_series.nlargest(10)
+    return top_10.index
+
 
 def make_print(group_num,col):
     print(str(group_num)+"그룹 top10 영화ID:",end='')
@@ -115,3 +137,10 @@ make_print(2,sc_group2)
 make_print(3,sc_group3)
 print("\n\n")
 
+print("### CR")
+cr_group1 = CR(group1)
+cr_group2 = CR(group2)
+cr_group3 = CR(group3)
+make_print(1,cr_group1)
+make_print(2,cr_group2)
+make_print(3,cr_group3)
